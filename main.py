@@ -55,27 +55,42 @@ class ConnectionString:
     password = ""
 
 
-# Retrieves queued messages of a given user
-def retrieve_queued_messages(conn_string, user):
+# Retrieves queued messages of a given user. If no user is given then the last
+# 15 records will be returned
+def retrieve_queued_messages(conn_string, user = ""):
     messages = collections.defaultdict(JobMessageQueue)
+
+    message_cutoff = 15
 
     # Opens a connection to the database 
     conn = pyodbc.connect(conn_string)
+
     # Creates a cursor object. From this object one can make queries against
     # the database
     curs = conn.cursor()
 
     i = 0
 
+    if user == "":
+        query = "SELECT * FROM [JobMessageQueue] ORDER BY Rec_id DESC"
+        objs = curs.execute(query)
+    else:
+        query = "SELECT * FROM [JobMessageQueue] WHERE UserID = ? ORDER BY Rec_id DESC"
+        objs = curs.execute(query, user)
+
+
     # Iterates through each row returned from the query and adds the record
     # to our user-defined dictionary messages
-    for row in curs.execute("SELECT * FROM [JobMessageQueue] WHERE UserID = ?", user):
+    for row in objs:
         message = JobMessageQueue(row.Rec_id, row.UserID, row.Message, row.Occurred)
         message.cleared = row.Cleared
         message.job_key = row.JobKey
 
         messages[i] = message
         i += 1
+
+        if i > message_cutoff:
+            break
     
     conn.close()
 
@@ -126,8 +141,6 @@ def print_queued_messages(messages):
 
 
 def main():
-    print("In the main function")
-
     if len(sys.argv) < 2:
         print("Include path to the connection string file")
         sys.exit(-1)
@@ -139,7 +152,7 @@ def main():
 
     print("Connection string is %s" % (conn_string))
 
-    messages = retrieve_queued_messages(conn_string, "kdeng")
+    messages = retrieve_queued_messages(conn_string)
 
     print_queued_messages(messages)
 
