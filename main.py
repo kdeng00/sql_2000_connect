@@ -19,12 +19,12 @@ class JobMessageQueue:
 
     # The constructor
     def __init__(self, rec_id = "", user_id = "", message = "", occurred = "", cleared = "", job_key = ""):
-      self.rec_id = rec_id
-      self.user_id = user_id
-      self.message = message
-      self.occurred = occurred
-      self.cleared = cleared
-      self.job_key = job_key
+        self.rec_id = rec_id
+        self.user_id = user_id
+        self.message = message
+        self.occurred = occurred
+        self.cleared = cleared
+        self.job_key = job_key
 
 
     rec_id = 0
